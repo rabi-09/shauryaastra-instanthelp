@@ -1694,7 +1694,7 @@ Map: https://www.google.com/maps?q=${APP_STATE.latestLocation.lat},${APP_STATE.l
         }
 
         async function getAIResponse(query) {
-            const response = await fetch("http://localhost:3001/api/ai", {
+            const response = await fetch("https://shauryaastra-instanthelp-demo.onrender.com/api/ai", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
