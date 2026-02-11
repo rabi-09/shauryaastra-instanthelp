@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Instant Help System (AI Powered Emergency Response)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e74c3c;
+            --secondary: #3498db;
+            --accent: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(135deg, var(--primary) 0%, #c0392b 100%);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--secondary);
+            outline: none;
+        }
+
+        .voice-input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .voice-input-btn {
+            position: absolute;
+            right: 10px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .voice-input-btn:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .voice-input-btn.listening {
+            background: var(--primary);
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--light);
+            display: none;
+        }
+
+        .voice-status.listening {
+            display: block;
+            background: #e8f4fc;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .voice-status.error {
+            display: block;
+            background: #fde8e8;
+            border-left: 4px solid var(--danger);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background: #e67e22;
+            transform: translateY(-2px);
+        }
+
+        .btn-large {
+            padding: 18px 30px;
+            font-size: 1.1rem;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .emergency-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .emergency-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .emergency-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .emergency-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .emergency-btn i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .emergency-btn.police {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        .emergency-btn.ambulance {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .emergency-btn.fire {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+        }
+
+        .location-info {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-info i {
+            color: var(--success);
+            font-size: 1.5rem;
+        }
+
+        .share-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .share-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .share-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .share-btn.whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        }
+
+        .share-btn.sms {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid var(--secondary);
+        }
+
+        .result-card h3 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .result-card p {
+            margin-bottom: 10px;
+        }
+
+        .result-card .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .quick-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-action-btn i {
+            font-size: 1.5rem;
+            color: var(--secondary);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            background: var(--light);
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .lang-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .lang-btn.active {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: var(--dark);
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        .route-info {
+            background: #e8f4fc;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .siren-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(231, 76, 60, 0.8);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-size: 2rem;
+            animation: sirenFlash 1s infinite;
+        }
+
+        @keyframes sirenFlash {
+
+            0%,
+            100% {
+                background: rgba(231, 76, 60, 0.8);
+            }
+
+            50% {
+                background: rgba(52, 152, 219, 0.8);
+            }
+        }
+
+        .siren-text {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .siren-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .map-control-btn {
+            display: block;
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .map-control-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .map-control-btn:hover {
+            background: #2980b9;
+        }
+
+        .service-distance {
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 5px;
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tts-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .voice-feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: #e8f4fc;
+            border-left: 4px solid var(--secondary);
+            display: none;
+        }
+
+        .voice-feedback.active {
+            display: block;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .success-card {
+            border-left: 5px solid var(--success);
+        }
+
+        .error-card {
+            border-left: 5px solid var(--danger);
+        }
+
+        .emergency-categories {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .emergency-category {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .emergency-category:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .emergency-category.active {
+            border-color: var(--primary);
+            background: #ffeaea;
+        }
+
+        .advanced-map-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .advanced-map-control-btn {
+            padding: 8px 12px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .advanced-map-control-btn:hover {
+            background: #2980b9;
+        }
+
+        .suggested-actions {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .suggested-action {
+            padding: 8px 12px;
+            background: #e8f4fc;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .suggested-action:hover {
+            background: #d1e7f7;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Siren Overlay for Emergency -->
+    <div class="siren-overlay" id="sirenOverlay">
+        <div class="siren-icon">
+            <i class="fas fa-ambulance"></i>
+        </div>
+        <div class="siren-text">EMERGENCY RESPONSE ACTIVATED</div>
+        <p>Help is on the way! Stay calm.</p>
+        <button class="btn btn-primary" onclick="closeSiren()">Close Alert</button>
+    </div>
+    <div>
+    </div>
+    <!-- User Information Modal -->
+    <div id="userInfoModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-user-circle"></i> Emergency Contact Information</h3>
+            <div class="input-group">
+                <input type="text" id="userName" placeholder="Enter your full name">
+            </div>
+            <div class="input-group">
+                <input type="tel" id="userMobile" placeholder="Enter your mobile number">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" onclick="submitEmergency()" style="flex: 1;">
+                    <i class="fas fa-paper-plane"></i> Submit Emergency
+                </button>
+                <button class="btn btn-secondary" onclick="closeUserModal()" style="flex: 1;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-first-aid"></i>
+            </div>
+            <h1>Instant Help System</h1>
+            <p class="tagline">AI-Powered Emergency Response & Assistance</p>
+        </header>
+
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span id="statusText">System Active - Tracking Your Location</span>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2><i class="fas fa-comment-medical"></i> Emergency Assistance</h2>
+
+                <div class="input-group">
+                    <div class="voice-input-container">
+                        <textarea id="userQuery"
+                            placeholder="Describe your emergency in detail... (You can type in Odia, Hindi, or English)"
+                            rows="4"></textarea>
+                        <button class="voice-input-btn" id="voiceInputBtn" title="Voice Input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <div class="voice-status" id="voiceStatus">
+                        <i class="fas fa-microphone"></i>
+                        <span id="voiceStatusText">Listening...</span>
+                    </div>
+                </div>
+
+                <div class="suggested-actions">
+                    <div class="suggested-action" onclick="insertSuggestedAction('I need medical help immediately')">
+                        Medical Help</div>
+                 
+                    <div class="suggested-action" onclick="insertSuggestedAction('I need police assistance')">Police
+                    </div>
+                    <div class="suggested-action" onclick="insertSuggestedAction('Fire emergency')">Fire</div>
+                    <div class="suggested-action" onclick="insertSuggestedAction('I feel unsafe')">Safety Concern</div>
+                </div>
+
+                <div class="language-selector">
+                    <button class="lang-btn active" data-lang="en">English</button>
+                    <button class="lang-btn" data-lang="hi">हिंदी</button>
+                    <button class="lang-btn" data-lang="or">ଓଡ଼ିଆ</button>
+                </div>
+
+                <button class="btn btn-primary btn-block btn-large" onclick="processQuery()">
+                    <i class="fas fa-bolt"></i> Get Instant Help
+                </button>
+
+                <div class="voice-controls">
+                    <button class="btn btn-secondary" onclick="startVoiceInput()">
+                        <i class="fas fa-microphone"></i> Voice Input
+                    </button>
+                    <button class="btn btn-accent" onclick="stopVoiceInput()">
+                        <i class="fas fa-stop"></i> Stop Listening
+                    </button>
+                </div>
+
+                <div class="quick-actions">
+                    <div class="quick-action-btn" onclick="quickHelp('medical')">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Medical Emergency</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="quickHelp('police')">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Police Assistance</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="quickHelp('fire')">
+                        <i class="fas fa-fire-extinguisher"></i>
+                        <span>Fire Emergency</span>
+                    </div>
+                    
+                
+                </div>
+
+                <div class="emergency-categories">
+                    <div class="emergency-category" onclick="selectEmergencyCategory('heart_attack')">Heart Attack</div>
+                    <div class="emergency-category" onclick="selectEmergencyCategory('stroke')">Stroke</div>
+                    <div class="emergency-category" onclick="selectEmergencyCategory('bleeding')">Severe Bleeding</div>
+                    <div class="emergency-category" onclick="selectEmergencyCategory('allergy')">Allergic Reaction</div>
+                    <div class="emergency-category" onclick="selectEmergencyCategory('poisoning')">Poisoning</div>
+                    <div class="emergency-category" onclick="selectEmergencyCategory('burn')">Burn Injury</div>
+                    <div class="emergency-category" onclick="selectEmergencyCategory('drowning')">Drowning</div>
+                    <div class="emergency-category" onclick="selectEmergencyCategory('choking')">Choking</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-map-marked-alt"></i> Your Location</h2>
+
+                <div class="location-info">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="locationText">Acquiring your location...</span>
+                </div>
+
+                <div id="map-container" style="position: relative;">
+                    <div id="map"></div>
+                    <div class="map-controls">
+                        <button class="map-control-btn" onclick="centerMapOnUser()">
+                            <i class="fas fa-location-arrow"></i> My Location
+                        </button>
+                        <button class="map-control-btn" onclick="clearRoutes()">
+                            <i class="fas fa-route"></i> Clear Routes
+                        </button>
+                    </div>
+                    <div class="advanced-map-controls">
+                        <button class="advanced-map-control-btn" onclick="findNearestHospital()">
+                            <i class="fas fa-hospital"></i> Find Hospital
+                        </button>
+                        <button class="advanced-map-control-btn" onclick="findNearestPoliceStation()">
+                            <i class="fas fa-shield-alt"></i> Find Police
+                        </button>
+                        <button class="advanced-map-control-btn" onclick="findNearestPharmacy()">
+                            <i class="fas fa-pills"></i> Find Pharmacy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="emergency-buttons">
+                    <a class="emergency-btn police" href="tel:100">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Police</span>
+                        <small>100</small>
+                    </a>
+                    <a class="emergency-btn ambulance" href="tel:108">
+                        <i class="fas fa-ambulance"></i>
+                        <span>Ambulance</span>
+                        <small>108</small>
+                    </a>
+                    <a class="emergency-btn fire" href="tel:101">
+                        <i class="fas fa-fire-extinguisher"></i>
+                        <span>Fire</span>
+                        <small>101</small>
+                    </a>
+                </div>
+
+                <div class="share-buttons">
+                    <a id="whatsappShare" class="share-btn whatsapp" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        Share via WhatsApp
+                    </a>
+                    <a id="smsShare" class="share-btn sms">
+                        <i class="fas fa-sms"></i>
+                        Share via SMS
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <h2><i class="fas fa-robot"></i> AI Assistance & Resources</h2>
+
+            <div class="loading hidden" id="loadingIndicator">
+                <div class="spinner"></div>
+                <span style="margin-left: 10px;">Analyzing your emergency...</span>
+            </div>
+
+            <div class="results" id="results">
+                <div class="result-card">
+                    <h3>Welcome to Instant Help System</h3>
+                    <p>Describe your emergency in the text box above or use one of the quick action buttons. Our AI will
+                        analyze your situation and provide immediate assistance.</p>
+                    <p><strong>Emergency Numbers:</strong> Police (100) | Ambulance (108) | Fire (101)</p>
+                    <div class="tts-controls">
+                        <button class="btn btn-primary"
+                            onclick="speakText('Welcome to Instant Help System. Describe your emergency in the text box or use voice input. Our AI will analyze your situation and provide immediate assistance. Emergency numbers are Police 100, Ambulance 108, Fire 101.')">
+                            <i class="fas fa-volume-up"></i> Read Welcome Message
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Instant Help System &copy; 2023 | AI-Powered Emergency Response</p>
+            <p>This system uses real-time location tracking, AI analysis, and voice commands to provide emergency
+                assistance.</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script>
+        // Enhanced configuration
+        const CONFIG = {
+            MAP_UPDATE_INTERVAL: 5000,
+            HIGH_ACCURACY: true,
+            MAX_LOCATION_AGE: 30000,
+            LOCATION_TIMEOUT: 10000,
+            NEARBY_SEARCH_RADIUS: 10000, // 10km radius
+            SIREN_DURATION: 5000 // 5 seconds
+        };
+
+        // Application state
+        const APP_STATE = {
+            map: null,
+            userMarker: null,
+            locationWatchId: null,
+            latestLocation: null,
+            currentLanguage: 'en',
+            isProcessing: false,
+            routingControl: null,
+            serviceMarkers: [],
+            currentCity: null,
+            // Voice recognition
+            recognition: null,
+            isListening: false,
+            speechSynthesis: window.speechSynthesis,
+            // Backend integration
+            currentEmergencyId: null,
+            userInfo: {
+                name: localStorage.getItem('emergencyUserName') || '',
+                mobile: localStorage.getItem('emergencyUserMobile') || ''
+            },
+            pendingEmergency: null,
+            sirenTimeout: null
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            initializeMap();
+            initializeLocationTracking();
+            initializeVoiceRecognition();
+            setupEventListeners();
+            updateStatus("System initialized. Acquiring your location...");
+
+            // Pre-fill user info if available
+            if (APP_STATE.userInfo.name) {
+                document.getElementById('userName').value = APP_STATE.userInfo.name;
+            }
+            if (APP_STATE.userInfo.mobile) {
+                document.getElementById('userMobile').value = APP_STATE.userInfo.mobile;
+            }
+
+            // Welcome message
+            setTimeout(() => {
+                speakText("Welcome to Instant Help System. You can describe your emergency by typing or using voice commands. Emergency numbers are Police 100, Ambulance 108, and Fire 101.");
+            }, 2000);
+        }
+        window.location.href = `/track?id=${data.emergency_id}`;
+
+        function initializeMap() {
+            // Create a default map centered on Odisha
+            APP_STATE.map = L.map('map').setView([20.2961, 85.8245], 12); // Default to Bhubaneswar
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(APP_STATE.map);
+
+            // Add a custom icon for the user
+            const userIcon = L.divIcon({
+                html: '<i class="fas fa-user-circle" style="font-size: 24px; color: #e74c3c;"></i>',
+                iconSize: [24, 24],
+                className: 'user-location-marker'
+            });
+
+            APP_STATE.userMarker = L.marker([20.2961, 85.8245], { icon: userIcon })
+                .addTo(APP_STATE.map)
+                .bindPopup("Your location will appear here once detected");
+        }
+
+        function initializeVoiceRecognition() {
+            // Check for browser support
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.error("Speech recognition not supported in this browser");
+                updateStatus("Voice commands not supported in your browser", "warning");
+                return;
+            }
+
+            // Initialize speech recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            APP_STATE.recognition = new SpeechRecognition();
+
+            // Configure recognition
+            APP_STATE.recognition.continuous = false;
+            APP_STATE.recognition.interimResults = false;
+            APP_STATE.recognition.lang = getSpeechRecognitionLanguage();
+
+            // Event handlers
+            APP_STATE.recognition.onstart = function () {
+                APP_STATE.isListening = true;
+                updateVoiceUI(true, "Listening... Speak now");
+                speakText("I'm listening. Please describe your emergency.");
+            };
+
+            APP_STATE.recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('userQuery').value = transcript;
+                updateVoiceUI(false, "Voice input received");
+
+                // Auto-process if it sounds like an emergency
+                if (isEmergencyPhrase(transcript)) {
+                    speakText("Emergency detected. Processing your request now.");
+                    setTimeout(() => processQuery(), 1000);
+                } else {
+                    speakText("I heard: " + transcript + ". Press the Get Instant Help button or say 'help' to proceed.");
+                }
+            };
+
+            APP_STATE.recognition.onerror = function (event) {
+                console.error("Speech recognition error", event.error);
+                APP_STATE.isListening = false;
+                updateVoiceUI(false, "Error: " + event.error);
+
+                if (event.error === 'not-allowed') {
+                    speakText("Microphone access denied. Please allow microphone permissions to use voice commands.");
+                }
+            };
+
+            APP_STATE.recognition.onend = function () {
+                APP_STATE.isListening = false;
+                updateVoiceUI(false, "Ready for voice input");
+            };
+        }
+
+        function getSpeechRecognitionLanguage() {
+            switch (APP_STATE.currentLanguage) {
+                case 'hi': return 'hi-IN';
+                case 'or': return 'or-IN';
+                default: return 'en-IN';
+            }
+        }
+
+        function isEmergencyPhrase(phrase) {
+            const emergencyKeywords = [
+                'help', 'emergency', 'accident', 'hospital', 'doctor', 'police',
+                'fire', 'ambulance', 'heart', 'attack', 'bleeding', 'injured',
+                'danger', 'urgent', 'save', 'rescue', 'bachao', 'madad',
+                'sahayata', 'sahayata chahiye', 'मदद', 'बचाओ', 'सहायता',
+                'ସହାୟତା', 'ବଞ୍ଚାଅ', 'ଆପତ୍ତି'
+            ];
+
+            const lowerPhrase = phrase.toLowerCase();
+            return emergencyKeywords.some(keyword => lowerPhrase.includes(keyword));
+        }
+
+        function updateVoiceUI(listening, statusText) {
+            const voiceBtn = document.getElementById('voiceInputBtn');
+            const voiceStatus = document.getElementById('voiceStatus');
+            const voiceStatusText = document.getElementById('voiceStatusText');
+
+            if (listening) {
+                voiceBtn.classList.add('listening');
+                voiceStatus.classList.add('listening');
+                voiceStatusText.textContent = statusText;
+            } else {
+                voiceBtn.classList.remove('listening');
+                voiceStatus.classList.remove('listening');
+                if (statusText) {
+                    voiceStatusText.textContent = statusText;
+                    voiceStatus.classList.add('listening');
+                    setTimeout(() => {
+                        voiceStatus.classList.remove('listening');
+                    }, 3000);
+                }
+            }
+        }
+
+        function startVoiceInput() {
+            if (!APP_STATE.recognition) {
+                alert("Voice recognition is not supported in your browser");
+                return;
+            }
+
+            if (APP_STATE.isListening) {
+                stopVoiceInput();
+                return;
+            }
+
+            try {
+                // Update language based on current selection
+                APP_STATE.recognition.lang = getSpeechRecognitionLanguage();
+                APP_STATE.recognition.start();
+            } catch (error) {
+                console.error("Error starting voice recognition:", error);
+                updateVoiceUI(false, "Error starting voice recognition");
+            }
+        }
+
+        function stopVoiceInput() {
+            if (APP_STATE.recognition && APP_STATE.isListening) {
+                APP_STATE.recognition.stop();
+            }
+        }
+
+        function initializeLocationTracking() {
+            if (!navigator.geolocation) {
+                updateStatus("Geolocation is not supported by this browser", "error");
+                return;
+            }
+
+            // Start watching position with high accuracy
+            APP_STATE.locationWatchId = navigator.geolocation.watchPosition(
+                handlePositionUpdate,
+                handleLocationError,
+                {
+                    enableHighAccuracy: CONFIG.HIGH_ACCURACY,
+                    maximumAge: CONFIG.MAX_LOCATION_AGE,
+                    timeout: CONFIG.LOCATION_TIMEOUT
+                }
+            );
+        }
+
+        function handlePositionUpdate(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            APP_STATE.latestLocation = { lat, lon, accuracy };
+
+            // Update map view
+            APP_STATE.map.setView([lat, lon], 15);
+
+            // Update user marker
+            if (APP_STATE.userMarker) {
+                APP_STATE.userMarker.setLatLng([lat, lon])
+                    .bindPopup(`<b>Your Location</b><br>Accuracy: ${Math.round(accuracy)} meters`)
+                    .openPopup();
+            } else {
+                const userIcon = L.divIcon({
+                    html: '<i class="fas fa-user-circle" style="font-size: 24px; color: #e74c3c;"></i>',
+                    iconSize: [24, 24],
+                    className: 'user-location-marker'
+                });
+
+                APP_STATE.userMarker = L.marker([lat, lon], { icon: userIcon })
+                    .addTo(APP_STATE.map)
+                    .bindPopup(`<b>Your Location</b><br>Accuracy: ${Math.round(accuracy)} meters`)
+                    .openPopup();
+            }
+
+            // Update location text and detect city
+            reverseGeocode(lat, lon);
+
+            // Update share links
+            updateShareLinks(lat, lon);
+
+            // Update status
+            updateStatus(`Location tracking active - Accuracy: ${Math.round(accuracy)}m`);
+        }
+
+        function handleLocationError(error) {
+            let errorMessage = "Unknown location error";
+
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = "Location access denied. Please enable location permissions.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = "Location information unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = "Location request timed out.";
+                    break;
+            }
+
+            updateStatus(errorMessage, "error");
+
+            // Fallback: Try to get approximate location using IP
+            getApproximateLocation();
+        }
+
+        function getApproximateLocation() {
+            fetch('https://ipapi.co/json/')
+                .then(response => response.json())
+                .then(data => {
+                    const lat = data.latitude;
+                    const lon = data.longitude;
+                    const city = data.city;
+                    const region = data.region;
+
+                    APP_STATE.latestLocation = { lat, lon, accuracy: 50000 }; // Low accuracy
+                    APP_STATE.currentCity = city;
+
+                    // Update map
+                    APP_STATE.map.setView([lat, lon], 10);
+
+                    if (APP_STATE.userMarker) {
+                        APP_STATE.userMarker.setLatLng([lat, lon])
+                            .bindPopup(`<b>Approximate Location</b><br>Based on IP: ${city}, ${region}`)
+                            .openPopup();
+                    }
+
+                    document.getElementById('locationText').innerText = `Approximate Location: ${city}, ${region} (Based on IP)`;
+                    updateStatus("Using approximate location based on IP", "warning");
+
+                    // Update share links
+                    updateShareLinks(lat, lon);
+                })
+                .catch(error => {
+                    console.error("IP-based location failed:", error);
+                    updateStatus("Could not determine your location", "error");
+                });
+        }
+
+        function reverseGeocode(lat, lon) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        document.getElementById('locationText').innerText = `Current Location: ${data.display_name}`;
+
+                        // Extract city name for better search
+                        if (data.address) {
+                            APP_STATE.currentCity = data.address.city || data.address.town || data.address.village ||
+                                data.address.county || data.address.state || "Unknown";
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("Reverse geocoding failed:", error);
+                    document.getElementById('locationText').innerText = `Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                });
+        }
+
+        function updateShareLinks(lat, lon) {
+            const mapLink = `https://www.google.com/maps?q=${lat},${lon}`;
+            const locationText = `🚨 Emergency! I need immediate assistance. My location: ${mapLink}`;
+
+            document.getElementById('whatsappShare').href = `https://wa.me/?text=${encodeURIComponent(locationText)}`;
+            document.getElementById('smsShare').href = `sms:?body=${encodeURIComponent(locationText)}`;
+        }
+
+        function updateStatus(message, type = "info") {
+            const statusElement = document.getElementById('statusText');
+            const statusDot = document.querySelector('.status-dot');
+
+            statusElement.textContent = message;
+
+            // Update dot color based on type
+            if (type === "error") {
+                statusDot.style.background = "var(--danger)";
+            } else if (type === "warning") {
+                statusDot.style.background = "var(--warning)";
+            } else {
+                statusDot.style.background = "var(--success)";
+            }
+        }
+
+        function setupEventListeners() {
+            // Language selector
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    APP_STATE.currentLanguage = this.getAttribute('data-lang');
+
+                    // Update speech recognition language when changed
+                    if (APP_STATE.recognition) {
+                        APP_STATE.recognition.lang = getSpeechRecognitionLanguage();
+                    }
+                });
+            });
+
+            // Enter key to submit query
+            document.getElementById('userQuery').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    processQuery();
+                }
+            });
+
+            // Voice input button
+            document.getElementById('voiceInputBtn').addEventListener('click', startVoiceInput);
+
+            // Voice command for emergency
+            document.addEventListener('keydown', function (e) {
+                // Ctrl+Space for emergency voice command
+                if (e.ctrlKey && e.code === 'Space') {
+                    e.preventDefault();
+                    startVoiceInput();
+                }
+
+                // Escape to stop listening
+                if (e.code === 'Escape' && APP_STATE.isListening) {
+                    stopVoiceInput();
+                }
+            });
+        }
+
+        function insertSuggestedAction(text) {
+            document.getElementById('userQuery').value = text;
+        }
+
+        function selectEmergencyCategory(category) {
+            // Reset all categories
+            document.querySelectorAll('.emergency-category').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Activate selected category
+            event.target.classList.add('active');
+
+            const queries = {
+                heart_attack: "Heart attack emergency. Person experiencing chest pain, shortness of breath, and discomfort in arms, back, neck, or jaw.",
+                stroke: "Stroke emergency. Person experiencing facial drooping, arm weakness, and speech difficulties.",
+                bleeding: "Severe bleeding emergency. Person has a deep wound with heavy bleeding that won't stop.",
+                allergy: "Severe allergic reaction. Person experiencing difficulty breathing, swelling of face and throat, and hives.",
+                poisoning: "Poisoning emergency. Person has ingested or been exposed to toxic substance.",
+                burn: "Serious burn injury. Person has severe burns covering large area of body.",
+                drowning: "Drowning emergency. Person pulled from water and not breathing properly.",
+                choking: "Choking emergency. Person cannot breathe, speak, or cough."
+            };
+
+            document.getElementById('userQuery').value = queries[category];
+            processQuery();
+        }
+
+        async function processQuery() {
+            if (APP_STATE.isProcessing) return;
+
+            const query = document.getElementById('userQuery').value.trim();
+            if (!query) {
+                alert("Please describe your emergency");
+                return;
+            }
+
+            if (!APP_STATE.latestLocation) {
+                alert("Please wait while we determine your location");
+                return;
+            }
+
+            // Show siren for serious emergencies
+            if (query.toLowerCase().includes('medical') ||
+                query.toLowerCase().includes('heart') ||
+                query.toLowerCase().includes('accident') ||
+                query.toLowerCase().includes('ambulance') ||
+                query.toLowerCase().includes('serious')) {
+                showSiren();
+            }
+
+            APP_STATE.isProcessing = true;
+            showLoading(true);
+
+            try {
+                const aiResponse = await getAIResponse(query);
+                displayResults(aiResponse);
+
+                // Read the AI response aloud
+                speakText(aiResponse);
+
+                // Determine emergency type from query
+                const emergencyType = determineEmergencyType(query);
+
+                // Show user information modal
+                showUserInfoModal(emergencyType, query);
+
+                // Automatically search for relevant services
+                const servicesToSearch = determineServicesToSearch(aiResponse, query);
+                servicesToSearch.forEach(service => {
+                    searchNearbyServices(service);
+                });
+
+            } catch (error) {
+                console.error("Error processing query:", error);
+                displayError("Failed to get AI response. Please try again or use emergency buttons.");
+                speakText("Sorry, I encountered an error processing your request. Please try again or use the emergency buttons.");
+            } finally {
+                APP_STATE.isProcessing = false;
+                showLoading(false);
+            }
+        }
+
+        function quickHelp(type) {
+            const queries = {
+                medical: "Serious medical emergency, need ambulance and hospital immediately",
+                police: "Need police assistance urgently, crime or security threat",
+                fire: "Fire emergency, need fire brigade immediately",
+                accident: "Serious accident happened, need medical and police assistance"
+            };
+
+            document.getElementById('userQuery').value = queries[type];
+
+            // Show siren for serious emergencies
+            if (type === 'medical' || type === 'accident') {
+                showSiren();
+            }
+
+            // Speak confirmation
+            const confirmations = {
+                medical: "Medical emergency activated. Please provide your details for emergency response.",
+                police: "Police assistance activated. Please provide your details for emergency response.",
+                fire: "Fire emergency activated. Please provide your details for emergency response.",
+                accident: "Accident emergency activated. Please provide your details for emergency response."
+            };
+
+            speakText(confirmations[type]);
+            processQuery();
+        }
+
+        function findNearestHospital() {
+            if (!APP_STATE.latestLocation) {
+                alert("Please wait while we determine your location");
+                return;
+            }
+
+            searchNearbyServices('hospital');
+            speakText("Searching for the nearest hospital to your location.");
+        }
+
+        function findNearestPoliceStation() {
+            if (!APP_STATE.latestLocation) {
+                alert("Please wait while we determine your location");
+                return;
+            }
+
+            searchNearbyServices('police');
+            speakText("Searching for the nearest police station to your location.");
+        }
+
+        function findNearestPharmacy() {
+            if (!APP_STATE.latestLocation) {
+                alert("Please wait while we determine your location");
+                return;
+            }
+
+            searchNearbyServices('pharmacy');
+            speakText("Searching for the nearest pharmacy to your location.");
+        }
+
+        // Show user information modal
+        function showUserInfoModal(emergencyType, description) {
+            // Pre-fill if available
+            if (APP_STATE.userInfo.name) {
+                document.getElementById('userName').value = APP_STATE.userInfo.name;
+            }
+            if (APP_STATE.userInfo.mobile) {
+                document.getElementById('userMobile').value = APP_STATE.userInfo.mobile;
+            }
+
+            APP_STATE.pendingEmergency = {
+                type: emergencyType,
+                description: description
+            };
+
+            document.getElementById('userInfoModal').style.display = 'flex';
+        }
+
+        // Close user modal
+        function closeUserModal() {
+            document.getElementById('userInfoModal').style.display = 'none';
+            APP_STATE.pendingEmergency = null;
+        }
+
+        // Submit emergency to backend
+        async function submitEmergency() {
+            const userName = document.getElementById('userName').value.trim();
+            const userMobile = document.getElementById('userMobile').value.trim();
+
+            if (!userName) {
+                alert("Please enter your full name");
+                return;
+            }
+
+            if (!userMobile) {
+                alert("Please enter your mobile number");
+                return;
+            }
+
+            // Validate mobile number
+            if (!isValidMobile(userMobile)) {
+                alert("Please enter a valid 10-digit mobile number");
+                return;
+            }
+
+            // Save to local storage
+            localStorage.setItem('emergencyUserName', userName);
+            localStorage.setItem('emergencyUserMobile', userMobile);
+            APP_STATE.userInfo = { name: userName, mobile: userMobile };
+
+            // Prepare emergency data
+            const emergencyData = {
+                userName: userName,
+                mobileNumber: userMobile,
+                location: {
+                    latitude: APP_STATE.latestLocation.lat,
+                    longitude: APP_STATE.latestLocation.lon,
+                    accuracy: APP_STATE.latestLocation.accuracy
+                },
+                emergencyType: APP_STATE.pendingEmergency.type,
+                description: APP_STATE.pendingEmergency.description,
+                address: document.getElementById('locationText').innerText.replace('Current Location: ', ''),
+                severity: determineSeverity(APP_STATE.pendingEmergency.description)
+            };
+
+            try {
+                showLoading(true);
+
+                const response = await fetch('/api/emergency', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(emergencyData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    APP_STATE.currentEmergencyId = result.emergency_id;
+
+                    // Show success message
+                    displaySuccess(`Emergency reported successfully! Your emergency ID: ${result.emergency_id}`);
+                    speakText(`Emergency reported successfully. Help is on the way. Your emergency ID is ${result.emergency_id}. Please stay on the line.`);
+
+                    // Close modal
+                    closeUserModal();
+
+                    // Update status
+                    updateStatus(`Emergency reported - ID: ${result.emergency_id}`, "success");
+
+                } else {
+                    throw new Error(result.message);
+                }
+
+            } catch (error) {
+                console.error('Error submitting emergency:', error);
+                displayError("Failed to submit emergency. Please try again or call emergency numbers directly.");
+                speakText("Sorry, we couldn't submit your emergency. Please use the emergency buttons to call for help directly.");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Determine emergency type from query
+        function determineEmergencyType(query) {
+            const lowerQuery = query.toLowerCase();
+
+            if (lowerQuery.includes('medical') || lowerQuery.includes('hospital') ||
+                lowerQuery.includes('doctor') || lowerQuery.includes('ambulance') ||
+                lowerQuery.includes('heart') || lowerQuery.includes('accident')) {
+                return 'medical';
+            } else if (lowerQuery.includes('police') || lowerQuery.includes('crime') ||
+                lowerQuery.includes('thief') || lowerQuery.includes('robbery') ||
+                lowerQuery.includes('attack') || lowerQuery.includes('fight')) {
+                return 'police';
+            } else if (lowerQuery.includes('fire') || lowerQuery.includes('burn')) {
+                return 'fire';
+            } else {
+                return 'accident';
+            }
+        }
+
+        // Determine severity
+        function determineSeverity(description) {
+            const lowerDesc = description.toLowerCase();
+
+            if (lowerDesc.includes('critical') || lowerDesc.includes('serious') ||
+                lowerDesc.includes('heart attack') || lowerDesc.includes('unconscious')) {
+                return 'critical';
+            } else if (lowerDesc.includes('accident') || lowerDesc.includes('bleeding') ||
+                lowerDesc.includes('injured') || lowerDesc.includes('emergency')) {
+                return 'high';
+            } else {
+                return 'medium';
+            }
+        }
+
+        // Validate mobile number
+        function isValidMobile(mobile) {
+            const mobileRegex = /^[6-9]\d{9}$/;
+            return mobileRegex.test(mobile.replace(/\D/g, ''));
+        }
+
+        // Display success message
+        function displaySuccess(message) {
+            const resultsDiv = document.getElementById('results');
+
+            const successCard = document.createElement('div');
+            successCard.className = 'result-card success-card';
+            successCard.innerHTML = `
+                <h3><i class="fas fa-check-circle"></i> Emergency Reported Successfully</h3>
+                <p>${message}</p>
+                <p><strong>Help is on the way! Please stay calm and wait for assistance.</strong></p>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="speakText('${message.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-volume-up"></i> Read Confirmation
+                    </button>
+                    <button class="btn btn-secondary" onclick="shareEmergencyDetails()">
+                        <i class="fas fa-share"></i> Share Details
+                    </button>
+                </div>
+            `;
+
+            resultsDiv.insertBefore(successCard, resultsDiv.firstChild);
+        }
+
+        // Share emergency details
+        function shareEmergencyDetails() {
+            if (!APP_STATE.currentEmergencyId) return;
+
+            const text = `🚨 EMERGENCY ALERT 🚨
+Emergency ID: ${APP_STATE.currentEmergencyId}
+Name: ${APP_STATE.userInfo.name}
+Mobile: ${APP_STATE.userInfo.mobile}
+Location: ${document.getElementById('locationText').innerText}
+Map: https://www.google.com/maps?q=${APP_STATE.latestLocation.lat},${APP_STATE.latestLocation.lon}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Emergency Alert',
+                    text: text
+                });
+            } else {
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        alert("Emergency details copied to clipboard");
+                        speakText("Emergency details copied to clipboard.");
+                    })
+                    .catch(() => {
+                        alert("Could not copy emergency details");
+                    });
+            }
+        }
+
+        async function getAIResponse(query) {
+            const response = await fetch("http://localhost:3001/api/ai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    query: query,
+                    language: APP_STATE.currentLanguage,
+                    location: APP_STATE.latestLocation,
+                    city: APP_STATE.currentCity
+                })
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error("API Error");
+            }
+
+            return result.response;
+        }
+
+
+
+        function determineServicesToSearch(aiResponse, userQuery) {
+            const services = [];
+            const lowerResponse = aiResponse.toLowerCase();
+            const lowerQuery = userQuery.toLowerCase();
+
+            if (lowerResponse.includes('hospital') || lowerResponse.includes('doctor') ||
+                lowerResponse.includes('medical') || lowerQuery.includes('heart') ||
+                lowerQuery.includes('accident') || lowerQuery.includes('injury')) {
+                services.push('hospital');
+            }
+
+            if (lowerResponse.includes('police') || lowerResponse.includes('crime') ||
+                lowerQuery.includes('threat') || lowerQuery.includes('robbery') ||
+                lowerQuery.includes('fight') || lowerQuery.includes('attack')) {
+                services.push('police');
+            }
+
+            if (lowerResponse.includes('fire') || lowerQuery.includes('fire') ||
+                lowerQuery.includes('burn') || lowerQuery.includes('smoke')) {
+                services.push('fire station');
+            }
+
+            if (lowerResponse.includes('pharmacy') || lowerResponse.includes('medicine') ||
+                lowerQuery.includes('medicine') || lowerQuery.includes('pharmacy')) {
+                services.push('pharmacy');
+            }
+
+            // Default to hospital if no specific service detected
+            if (services.length === 0) {
+                services.push('hospital');
+            }
+
+            return services;
+        }
+        window.location.href = `/track/${data.emergency_id}`;
+
+        function searchNearbyServices(serviceType) {
+            if (!APP_STATE.latestLocation) return;
+
+            const { lat, lon } = APP_STATE.latestLocation;
+
+            // Clear previous service markers
+            clearServiceMarkers();
+
+            // Use a better search approach with city name to get local results
+            let searchQuery = serviceType;
+            if (APP_STATE.currentCity) {
+                searchQuery += ` ${APP_STATE.currentCity} Odisha India`;
+            }
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=10`)
+                .then(res => res.json())
+                .then(places => {
+                    // Filter places to only show those within reasonable distance
+                    const nearbyPlaces = places.filter(place => {
+                        const distance = calculateDistance(lat, lon, place.lat, place.lon);
+                        return distance < 50; // Only show places within 50km
+                    });
+
+                    // Sort by distance
+                    nearbyPlaces.sort((a, b) => {
+                        const distA = calculateDistance(lat, lon, a.lat, a.lon);
+                        const distB = calculateDistance(lat, lon, b.lat, b.lon);
+                        return distA - distB;
+                    });
+
+                    // Take only the 5 closest
+                    const closestPlaces = nearbyPlaces.slice(0, 5);
+
+                    displayNearbyServices(serviceType, closestPlaces);
+                    addServiceMarkers(serviceType, closestPlaces);
+
+                    // Announce findings
+                    if (closestPlaces.length > 0) {
+                        speakText(`Found ${closestPlaces.length} ${serviceType}s near you. The closest one is ${calculateDistance(lat, lon, closestPlaces[0].lat, closestPlaces[0].lon).toFixed(1)} kilometers away.`);
+                    } else {
+                        speakText(`No ${serviceType}s found nearby. Please use emergency numbers for immediate assistance.`);
+                    }
+                })
+                .catch(err => {
+                    console.error("Service search failed:", err);
+                    displayError(`Could not find nearby ${serviceType}s`);
+                    speakText(`Sorry, I couldn't find nearby ${serviceType}s. Please try emergency numbers for immediate help.`);
+                });
+        }
+
+        function displayResults(aiResponse) {
+            const resultsDiv = document.getElementById('results');
+
+            const resultCard = document.createElement('div');
+            resultCard.className = 'result-card';
+            resultCard.innerHTML = `
+                <h3><i class="fas fa-robot"></i> AI Emergency Assistance</h3>
+                <p>${aiResponse.replace(/\n/g, '<br>')}</p>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="speakText('${aiResponse.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-volume-up"></i> Read Aloud
+                    </button>
+                    <button class="btn btn-secondary" onclick="shareResponse('${aiResponse.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-share"></i> Share Advice
+                    </button>
+                </div>
+            `;
+
+            resultsDiv.insertBefore(resultCard, resultsDiv.firstChild);
+
+            // Limit to 5 results
+            if (resultsDiv.children.length > 5) {
+                resultsDiv.removeChild(resultsDiv.lastChild);
+            }
+        }
+
+        function displayNearbyServices(serviceType, places) {
+            const resultsDiv = document.getElementById('results');
+
+            if (places.length === 0) {
+                const noResultsCard = document.createElement('div');
+                noResultsCard.className = 'result-card';
+                noResultsCard.innerHTML = `
+                    <h3><i class="fas fa-map-marker-alt"></i> Nearby ${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}s</h3>
+                    <p>No ${serviceType}s found nearby. Try expanding search area or use emergency numbers.</p>
+                `;
+                resultsDiv.insertBefore(noResultsCard, resultsDiv.children[1]);
+                return;
+            }
+
+            const servicesCard = document.createElement('div');
+            servicesCard.className = 'result-card';
+
+            let servicesHTML = `
+                <h3><i class="fas fa-map-marker-alt"></i> Nearby ${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}s</h3>
+            `;
+
+            places.forEach(place => {
+                // Calculate distance from user
+                const distance = calculateDistance(
+                    APP_STATE.latestLocation.lat,
+                    APP_STATE.latestLocation.lon,
+                    place.lat,
+                    place.lon
+                );
+
+                servicesHTML += `
+                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                        <strong>${place.display_name.split(',')[0]}</strong><br>
+                        <small>${place.display_name.split(',').slice(1, 3).join(',')}</small><br>
+                        <div class="service-distance">Distance: ${distance.toFixed(1)} km</div>
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-primary" onclick="showRouteToService(${place.lat}, ${place.lon}, '${place.display_name.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-route"></i> Show Route
+                            </button>
+                            <a href="https://www.google.com/maps?q=${place.lat},${place.lon}" target="_blank" style="margin-left: 10px;">
+                                <i class="fas fa-external-link-alt"></i> View on Map
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            servicesCard.innerHTML = servicesHTML;
+            resultsDiv.insertBefore(servicesCard, resultsDiv.children[1]);
+
+            // Limit to 5 results
+            if (resultsDiv.children.length > 5) {
+                resultsDiv.removeChild(resultsDiv.lastChild);
+            }
+        }
+
+        function addServiceMarkers(serviceType, places) {
+            // Define icons for different service types
+            const icons = {
+                'hospital': L.divIcon({
+                    html: '<i class="fas fa-hospital" style="font-size: 20px; color: #e74c3c;"></i>',
+                    iconSize: [20, 20],
+                    className: 'service-marker'
+                }),
+                'police': L.divIcon({
+                    html: '<i class="fas fa-shield-alt" style="font-size: 20px; color: #3498db;"></i>',
+                    iconSize: [20, 20],
+                    className: 'service-marker'
+                }),
+                'fire station': L.divIcon({
+                    html: '<i class="fas fa-fire-extinguisher" style="font-size: 20px; color: #f39c12;"></i>',
+                    iconSize: [20, 20],
+                    className: 'service-marker'
+                }),
+                'pharmacy': L.divIcon({
+                    html: '<i class="fas fa-plus-square" style="font-size: 20px; color: #2ecc71;"></i>',
+                    iconSize: [20, 20],
+                    className: 'service-marker'
+                })
+            };
+
+            places.forEach(place => {
+                // Calculate distance from user
+                const distance = calculateDistance(
+                    APP_STATE.latestLocation.lat,
+                    APP_STATE.latestLocation.lon,
+                    place.lat,
+                    place.lon
+                );
+
+                const marker = L.marker([place.lat, place.lon], { icon: icons[serviceType] })
+                    .addTo(APP_STATE.map)
+                    .bindPopup(`
+                        <b>${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}</b><br>
+                        ${place.display_name}<br>
+                        <div class="service-distance">Distance: ${distance.toFixed(1)} km</div>
+                        <button class="btn btn-primary" onclick="showRouteToService(${place.lat}, ${place.lon}, '${place.display_name.replace(/'/g, "\\'")}')" style="margin-top: 5px; width: 100%;">
+                            <i class="fas fa-route"></i> Show Route
+                        </button>
+                    `);
+
+                APP_STATE.serviceMarkers.push(marker);
+            });
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function showRouteToService(lat, lon, name) {
+            // Clear any existing route
+            if (APP_STATE.routingControl) {
+                APP_STATE.map.removeControl(APP_STATE.routingControl);
+            }
+
+            // Create route from user location to service
+            APP_STATE.routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(APP_STATE.latestLocation.lat, APP_STATE.latestLocation.lon),
+                    L.latLng(lat, lon)
+                ],
+                routeWhileDragging: false,
+                showAlternatives: false,
+                lineOptions: {
+                    styles: [{ color: '#3498db', opacity: 0.7, weight: 5 }]
+                },
+                createMarker: function () { return null; } // Don't create default markers
+            }).addTo(APP_STATE.map);
+
+            // Add route info to results
+            const resultsDiv = document.getElementById('results');
+            const routeCard = document.createElement('div');
+            routeCard.className = 'result-card';
+            routeCard.innerHTML = `
+                <h3><i class="fas fa-route"></i> Route to ${name.split(',')[0]}</h3>
+                <div class="route-info">
+                    <p>Route calculated from your current location to ${name.split(',')[0]}</p>
+                    <p>The route is shown in blue on the map.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="clearRoutes()">
+                    <i class="fas fa-times"></i> Clear Route
+                </button>
+            `;
+            resultsDiv.insertBefore(routeCard, resultsDiv.firstChild);
+
+            // Announce route
+            const distance = calculateDistance(APP_STATE.latestLocation.lat, APP_STATE.latestLocation.lon, lat, lon);
+            speakText(`Route calculated to ${name.split(',')[0]}. It is ${distance.toFixed(1)} kilometers away. The route is now visible on the map.`);
+
+            // Limit to 5 results
+            if (resultsDiv.children.length > 5) {
+                resultsDiv.removeChild(resultsDiv.lastChild);
+            }
+        }
+
+        function clearRoutes() {
+            if (APP_STATE.routingControl) {
+                APP_STATE.map.removeControl(APP_STATE.routingControl);
+                APP_STATE.routingControl = null;
+                speakText("Route cleared from the map.");
+            }
+        }
+
+        function clearServiceMarkers() {
+            APP_STATE.serviceMarkers.forEach(marker => {
+                APP_STATE.map.removeLayer(marker);
+            });
+            APP_STATE.serviceMarkers = [];
+        }
+
+        function centerMapOnUser() {
+            if (APP_STATE.latestLocation) {
+                APP_STATE.map.setView([APP_STATE.latestLocation.lat, APP_STATE.latestLocation.lon], 15);
+                speakText("Map centered on your location.");
+            }
+        }
+
+        function displayError(message) {
+            const resultsDiv = document.getElementById('results');
+
+            const errorCard = document.createElement('div');
+            errorCard.className = 'result-card error-card';
+            errorCard.innerHTML = `
+                <h3><i class="fas fa-exclamation-triangle"></i> Error</h3>
+                <p>${message}</p>
+            `;
+
+            resultsDiv.insertBefore(errorCard, resultsDiv.firstChild);
+        }
+
+        function showLoading(show) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (show) {
+                loadingIndicator.classList.remove('hidden');
+            } else {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        function showSiren() {
+            const sirenOverlay = document.getElementById('sirenOverlay');
+            sirenOverlay.style.display = 'flex';
+
+            // Play ambulance siren sound (if allowed by browser)
+            playSirenSound();
+
+            // Emergency voice announcement
+            speakText("Emergency response activated! Help is on the way. Please stay calm and follow the instructions.");
+
+            // Auto-close siren after 5 seconds
+            if (APP_STATE.sirenTimeout) {
+                clearTimeout(APP_STATE.sirenTimeout);
+            }
+            APP_STATE.sirenTimeout = setTimeout(() => {
+                closeSiren();
+            }, CONFIG.SIREN_DURATION);
+        }
+
+        function closeSiren() {
+            const sirenOverlay = document.getElementById('sirenOverlay');
+            sirenOverlay.style.display = 'none';
+            stopSirenSound();
+        }
+
+        function playSirenSound() {
+            // Create a simple siren sound using Web Audio API
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1600, audioContext.currentTime + 0.5);
+
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+
+                // Repeat the siren sound for 5 seconds
+                let count = 0;
+                const interval = setInterval(() => {
+                    if (count < 10) { // 10 * 0.5s = 5 seconds
+                        playSirenSound();
+                        count++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 500);
+            } catch (e) {
+                console.log("Audio context not supported or autoplay blocked");
+            }
+        }
+
+        function stopSirenSound() {
+            // This would stop any ongoing siren sound
+            // In a real implementation, we would need to keep track of the audio context
+        }
+
+        function speakText(text) {
+            if (!APP_STATE.speechSynthesis) {
+                console.log("Text-to-speech not supported");
+                return;
+            }
+
+            // Cancel any ongoing speech
+            APP_STATE.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // Set language based on current selection
+            utterance.lang = APP_STATE.currentLanguage === 'hi' ? 'hi-IN' :
+                APP_STATE.currentLanguage === 'or' ? 'or-IN' : 'en-IN';
+
+            // Set voice properties
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            utterance.onend = function () {
+                console.log("Speech finished");
+            };
+
+            utterance.onerror = function (event) {
+                console.error("Speech synthesis error:", event);
+            };
+
+            APP_STATE.speechSynthesis.speak(utterance);
+        }
+
+        function shareResponse(response) {
+            const text = `Emergency Advice: ${response}\n\nMy Location: ${APP_STATE.latestLocation ? `https://www.google.com/maps?q=${APP_STATE.latestLocation.lat},${APP_STATE.latestLocation.lon}` : 'Unknown'}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Emergency Assistance',
+                    text: text
+                });
+            } else {
+                // Fallback - copy to clipboard
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        alert("Advice copied to clipboard");
+                        speakText("Emergency advice copied to clipboard.");
+                    })
+                    .catch(() => {
+                        alert("Could not copy advice");
+                        speakText("Sorry, I couldn't copy the advice to clipboard.");
+                    });
+            }
+        }   
+    </script>
+
+
+
+</body>
+
+</html>
