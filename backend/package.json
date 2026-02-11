@@ -1,0 +1,24 @@
+{
+  "name": "instant-help-backend",
+  "version": "1.0.0",
+  "description": "Backend for Instant Help System",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "groq-sdk": "^0.37.0",
+    "mongoose": "^7.5.0",
+    "node-fetch": "^3.3.2",
+    "path": "^0.12.7",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
